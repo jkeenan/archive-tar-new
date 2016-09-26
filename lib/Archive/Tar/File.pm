@@ -6,6 +6,7 @@ use IO::File;
 use File::Spec::Unix    ();
 use File::Spec          ();
 use File::Basename      ();
+use Data::Dumper;
 
 ### avoid circular use, so only require;
 require Archive::Tar;
@@ -401,10 +402,15 @@ sub _prefix_and_file {
     ### so sometimes the last element is '' -- probably when trailing
     ### dir slashes are encountered... this is of course pointless,
     ### so remove it
+print STDERR "QQQ:";
+print STDERR Dumper([@dirs]);
     pop @dirs while @dirs and not length $dirs[-1];
+print STDERR "RRR:";
+print STDERR Dumper([@dirs]);
 
     ### if it's a directory, then $file might be empty
     $file = pop @dirs if $self->is_dir and not length $file;
+print STDERR "SSS: file: $file\n";
 
     ### splitting ../ gives you the relative path in native syntax
     map { $_ = '..' if $_  eq '-' } @dirs if ON_VMS;

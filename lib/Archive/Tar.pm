@@ -14,6 +14,7 @@ use Carp                qw(carp croak);
 use File::Spec          ();
 use File::Spec::Unix    ();
 use File::Path          ();
+use Data::Dumper;
 
 use Archive::Tar::File;
 use Archive::Tar::Constant;
@@ -1288,12 +1289,14 @@ sub write {
         ### of the name and prefix fields -- this needs to be limited to
         ### write() only!
         my $clone = $entry->clone;
+print STDERR "JJJ: clone\n";
+print STDERR Dumper($clone);
 
 
         ### so, if you don't want use to use the prefix, we'll stuff
         ### everything in the name field instead
         if( $DO_NOT_USE_PREFIX ) {
-
+print STDERR "DO_NOT_USE_PREFIX\n";
             ### you might have an extended prefix, if so, set it in the clone
             ### XXX is ::Unix right?
             $clone->name( length $ext_prefix
@@ -1305,9 +1308,15 @@ sub write {
         ### otherwise, we'll have to set it properly -- prefix part in the
         ### prefix and name part in the name field.
         } else {
+print STDERR "USE_PREFIX\n";
 
             ### split them here, not before!
+print STDERR "KKK: clone->full_path: ", $clone->full_path, "\n";
+# clone->full_path shows directory entries still have trailing slash
             my ($prefix,$name) = $clone->_prefix_and_file( $clone->full_path );
+print STDERR "LLL: prefix|name: ", join('|' => ($prefix,$name)), "\n";
+# At this point $name has lost trailing slash on directory entries.
+# Hence, problem lies in _prefix_and_file().
 
             ### you might have an extended prefix, if so, set it in the clone
             ### XXX is ::Unix right?
@@ -1315,8 +1324,13 @@ sub write {
                 if length $ext_prefix;
 
             $clone->prefix( $prefix );
+print STDERR "MMM: name: $name\n";
             $clone->name( $name );
+print STDERR "NNN: clone->name: ", $clone->name, "\n";
         }
+        #print STDERR Dumper($clone);
+# 'name' in $clone has already lost the trailing slash on the 2 directory
+# entries
 
         ### names are too long, and will get truncated if we don't add a
         ### '@LongLink' file...
